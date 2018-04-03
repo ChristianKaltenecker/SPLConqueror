@@ -35,6 +35,14 @@ namespace MachineLearning.Learning.Regression
 
         //Learning and validation data sets
         protected List<Configuration> learningSet = new List<Configuration>();
+
+        /// <summary>
+        /// Returns the learning set.
+        /// </summary>
+        /// <value>The learning set.</value>
+        public List<Configuration> LearningSet {
+            get { return learningSet; }
+        }
         protected List<Configuration> validationSet = new List<Configuration>();
         protected ILArray<double> Y_learning, Y_validation = ILMath.empty();
         protected ConcurrentDictionary<Feature, ILArray<double>> DM_columns = new ConcurrentDictionary<Feature, ILArray<double>>();
