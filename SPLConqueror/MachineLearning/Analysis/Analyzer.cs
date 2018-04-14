@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.IO;
 using System.Text;
+using ProcessWrapper;
 
 namespace MachineLearning.Analysis
 {
@@ -24,7 +25,7 @@ namespace MachineLearning.Analysis
         /// </summary>
         /// <returns>The overall error to the ground-truth (i.e., the whole population).</returns>
         /// <param name="learnedModels">The learned models, where the first model contains the whole population analysis.</param>
-        public static void analyzeModels (FeatureSubsetSelection [] learnedModels, String [] names, String filePath)
+        public static void analyzeModels (FeatureSubsetSelection [] learnedModels, String [] names, String filePath, string outputPath)
         {
             // Search for the terms that were included by machine learning
             List<BinaryOption []> identifiedTerms = new List<BinaryOption []> ();
@@ -96,30 +97,11 @@ namespace MachineLearning.Analysis
             // Write the results in a file
             writeToFile (filePath, convertToString (sampleSetCounts, influence, names));
 
-            // TODO: Call Python
-
-            //// Analyze them by using (1) the difference of the number of appearencies, ((2) the general impact), 
-            //// and (3) the number of appearencies in the whole population
-
-            //// Acquire the needed data
-            //double [] appearenciesError = new double [learnedModels.Length];
-            //for (int i = 1; i < learnedModels.Length; i++) {
-            //    foreach (BinaryOption [] options in sampleSetCounts [i].Keys) {
-            //        appearenciesError[i] += Math.Abs(wpCounts[options] - sampleSetCounts[i][options]) / wpCounts[options];
-            //    }
-            //}
-
-            //// Compute the difference between the models
-            //double [] sampleSetError = new double [learnedModels.Length];
-
-            //for (int i = 1; i < learnedModels.Length; i++) {
-            //    foreach (BinaryOption [] options in sampleSetCounts [i].Keys) {
-            //        // TODO: Has to be multiplied by influence in WP (if a term does not appear, then it is irelevant and thus, is left out)
-            //        sampleSetError[i] += appearenciesError [i] * wpCounts[options];
-            //    }
-            //}
-
-            //return sampleSetError;
+            // Call Python
+            PythonWrapper pyWrapper = new PythonWrapper(AppDomain.CurrentDomain.BaseDirectory + Path.DirectorySeparatorChar + PythonWrapper.PLOTTER_SCRIPT, 
+                new string[0], filePath + " " + outputPath);
+            pyWrapper.waitForNextReceivedLine();
+            pyWrapper.endProcess();
         }
 
         private static string convertToString (Dictionary<BinaryOption [], double> [] counts, Dictionary<BinaryOption [], double> [] influences, String [] names)

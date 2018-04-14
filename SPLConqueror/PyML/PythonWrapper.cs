@@ -14,6 +14,7 @@ namespace ProcessWrapper
         protected string SCRIPT_LOCATION = System.IO.Path.DirectorySeparatorChar + "PyML" + System.IO.Path.DirectorySeparatorChar + "pyScripts";
 
         public const string COMMUNICATION_SCRIPT = "Communication.py";
+        public const string PLOTTER_SCRIPT = "Plotter.py";
 
         public static string PYTHON_PATH = "python";
 
@@ -59,10 +60,12 @@ namespace ProcessWrapper
         /// </summary>
         /// <param name="path">The path of the source file called to start Python.</param>
         /// <param name="mlProperties">Configurations for the machine learning algorithm.</param>
-        public PythonWrapper(string path, string[] mlProperties)
+        /// <param name="args">The arguments that should be passed to the python script.</param>
+        public PythonWrapper(string path, string[] mlProperties, string args = "")
         {
             this.mlProperties = mlProperties;
             ProcessStartInfo pythonSetup = new ProcessStartInfo(PYTHON_PATH, path);
+            pythonSetup.Arguments = args;
             pythonSetup.UseShellExecute = false;
             pythonSetup.RedirectStandardInput = true;
             pythonSetup.RedirectStandardOutput = true;
@@ -85,7 +88,11 @@ namespace ProcessWrapper
             }
         }
 
-        private string waitForNextReceivedLine()
+        /// <summary>
+        /// Waits for the next line from the python script and returns it.
+        /// </summary>
+        /// <returns>the next line from the python script.</returns>
+        public string waitForNextReceivedLine()
         {
             string processOutput = "";
             while (processOutput == null || processOutput.Length == 0)

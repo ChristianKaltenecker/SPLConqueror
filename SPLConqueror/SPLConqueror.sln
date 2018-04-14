@@ -11,6 +11,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommandLine", "CommandLine\
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MachineLearning", "MachineLearning\MachineLearning.csproj", "{AEBDC4EA-60AD-4A95-8407-059B07150782}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2BF7A78C-C6F4-4AFB-BE09-48B2B13F45E7} = {2BF7A78C-C6F4-4AFB-BE09-48B2B13F45E7}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{DB86CE53-028B-4407-907C-7CCA0F6AE7B4}"
 EndProject
@@ -302,5 +305,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8FD29A2C-4036-4C12-974C-91999829540D}
 	EndGlobalSection
 EndGlobal
