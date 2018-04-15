@@ -25,16 +25,32 @@ namespace MachineLearning.Analysis
         /// </summary>
         /// <returns>The overall error to the ground-truth (i.e., the whole population).</returns>
         /// <param name="learnedModels">The learned models, where the first model contains the whole population analysis.</param>
-        public static void analyzeModels (FeatureSubsetSelection [] learnedModels, String [] names, String filePath, string outputPath)
+        public static void analyzeModels (VariabilityModel vm, Tuple<String, String, String>[] learnedModels, String filePath, String outputPath)
         {
+            // Read in measurements and log files
+            List<Configuration>[] allMeasurements = new List<Configuration>[learnedModels.Length];
+            Tuple<string[][], double>[] logInfo = new Tuple<string[][], double>[learnedModels.Length];
+            for (int i = 0; i < learnedModels.Length; i++)
+            {
+                allMeasurements[i] = ConfigurationReader.readConfigurations(learnedModels[i].Item3, vm);
+                logInfo[i] = ExtractTerms(getLastModelLine(learnedModels[i].Item3));
+            }
+            
+
             // Search for the terms that were included by machine learning
             List<BinaryOption []> identifiedTerms = new List<BinaryOption []> ();
             Dictionary<BinaryOption [], double> [] influence = new Dictionary<BinaryOption [], double> [learnedModels.Length];
             for (int i = 0; i < learnedModels.Length; i++) {
                 influence [i] = new Dictionary<BinaryOption [], double> ();
-                foreach (LearningRound round in learnedModels [i].LearningHistory) {
+                foreach (string[] model in logInfo[i].Item1) { 
+                //foreach (LearningRound round in learnedModels [i].LearningHistory) {
                     List<BinaryOption> options = new List<BinaryOption> ();
-                    options.AddRange (round.bestCandidate.participatingBoolOptions);
+                    
+                    for (int j = 1; j < model.Length; j++)
+                    {
+                        options.Add(new BinaryOption(vm, model[j]));
+                    }
+
                     options.Sort ();
                     BinaryOption [] optionsArray = options.ToArray ();
 
@@ -52,15 +68,18 @@ namespace MachineLearning.Analysis
 
             // Get influences of all learned models
             for (int i = 0; i < learnedModels.Length; i++) {
-                LearningRound best = learnedModels [0].LearningHistory [learnedModels [0].LearningHistory.Count - 1];
+                string[][] wpModel = logInfo[0].Item1;
                 double influenceSum = 0.0;
-                foreach (Feature term in best.FeatureSet) {
+                foreach (string[] term in logInfo[i].Item1) {
                     List<BinaryOption> binOpts = new List<BinaryOption> ();
-                    binOpts.AddRange (term.participatingBoolOptions);
+                    for (int j = 1; j < term.Length; j++)
+                    {
+                        binOpts.Add(new BinaryOption(vm, term[j]));
+                    }
                     binOpts.Sort ();
                     BinaryOption [] binArray = binOpts.ToArray ();
-                    influence [i] [binArray] = Math.Abs (term.Constant);
-                    influenceSum += Math.Abs (term.Constant);
+                    influence [i] [binArray] = Math.Abs (Double.Parse(term[0]));
+                    influenceSum += Math.Abs(Double.Parse(term[0]));
                 }
 
                 // Compute the relative influence
@@ -75,23 +94,29 @@ namespace MachineLearning.Analysis
 
             // Count only the necessary configuration options and interactions
             Dictionary<BinaryOption [], double> [] sampleSetCounts = new Dictionary<BinaryOption [], double> [learnedModels.Length];
-            Dictionary<BinaryOption [], double> [] sampleSetTermRank = new Dictionary<BinaryOption [], double> [learnedModels.Length];
             for (int i = 0; i < learnedModels.Length; i++) {
                 sampleSetCounts [i] = new Dictionary<BinaryOption [], double> ();
-                sampleSetTermRank [i] = new Dictionary<BinaryOption [], double> ();
 
-                foreach (LearningRound round in learnedModels [i].LearningHistory) {
+                foreach (string[] term in logInfo[i].Item1) {
                     List<BinaryOption> options = new List<BinaryOption> ();
-                    options.AddRange (round.bestCandidate.participatingBoolOptions);
+                    for (int j = 1; j < term.Length; j++)
+                    {
+                        options.Add(new BinaryOption(vm, term[j]));
+                    }
                     options.Sort ();
                     BinaryOption [] optionsArray = options.ToArray ();
-                    sampleSetTermRank [i] [optionsArray] = round.round;
                 }
 
-                foreach (Configuration config in learnedModels [i].LearningSet) {
+                foreach (Configuration config in allMeasurements[i]) {
                     countIfContained (config, identifiedTerms, sampleSetCounts [i]);
                 }
-                divideDictionaryValuesBy (sampleSetCounts [i], learnedModels [i].LearningSet.Count);
+                divideDictionaryValuesBy (sampleSetCounts [i], allMeasurements[i].Count);
+            }
+
+            string[] names = new string[learnedModels.Length];
+            for (int i = 0; i < learnedModels.Length; i++)
+            {
+                names[i] = learnedModels[i].Item1;
             }
 
             // Write the results in a file
@@ -102,6 +127,35 @@ namespace MachineLearning.Analysis
                 new string[0], filePath + " " + outputPath);
             pyWrapper.waitForNextReceivedLine();
             pyWrapper.endProcess();
+        }
+
+        private static Tuple<string[][], double> ExtractTerms(string line)
+        {
+            string[] elements = line.Split(';');
+            string[] terms = elements[1].Split('+');
+            string[][] allTerms = new string[terms.Length][];
+            for (int i = 0; i < allTerms.Length; i++)
+            {
+                allTerms[i] = terms[i].Split('*');
+            }
+
+            double errorRate = Double.Parse(elements[elements.Length - 1]);
+            return new Tuple<string[][], double>(allTerms, errorRate);
+        }
+
+        private static string getLastModelLine(String file)
+        {
+            string[] lines = File.ReadAllLines(file);
+
+            for (int i = lines.Length - 1; i > 0; i--)
+            {
+                if (lines[i].Contains(";"))
+                {
+                    return lines[i];
+                }
+            }
+
+            return "";
         }
 
         private static string convertToString (Dictionary<BinaryOption [], double> [] counts, Dictionary<BinaryOption [], double> [] influences, String [] names)
