@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{FC16C300-5B58-4759-98BA-C7D126C16EC5}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>AnalyzerTest</RootNamespace>
+    <AssemblyName>AnalyzerTest</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="AnalyzerInfo.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="YMLParser.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MachineLearning\MachineLearning.csproj">
+      <Project>{AEBDC4EA-60AD-4A95-8407-059B07150782}</Project>
+      <Name>MachineLearning</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SPLConqueror\SPLConqueror_Core.csproj">
+      <Project>{1F035958-15B1-450A-BFC5-BEBD95376C40}</Project>
+      <Name>SPLConqueror_Core</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="YamlDotNet">
+      <HintPath>..\packages\YamlDotNet.4.3.1\lib\net45\YamlDotNet.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+</Project>

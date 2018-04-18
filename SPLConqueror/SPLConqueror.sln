@@ -37,6 +37,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SPLConquerorCoreTest", "SPL
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PythonTest", "PythonTest\PythonTest.csproj", "{16FE7FA8-267E-45C8-9C27-FF396EBA789C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnalyzerTest", "AnalyzerTest\AnalyzerTest.csproj", "{FC16C300-5B58-4759-98BA-C7D126C16EC5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
