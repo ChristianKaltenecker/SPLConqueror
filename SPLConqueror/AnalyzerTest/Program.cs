@@ -1,10 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Globalization;
 using System.Collections.Generic;
-using MachineLearning.Analysis;
-using SPLConqueror_Core;
-using System.IO;
 
 namespace AnalyzerTest
 {
@@ -14,26 +12,46 @@ namespace AnalyzerTest
         {
             Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture ("en-US");
 
-            if (args.Length <= 2 || (args.Length - 2) % 3 != 0) {
+            if (args.Length != 1) {
                 PrintUsage ();
                 Environment.Exit (0);
             }
 
-            String vmPath = args [0];
-            VariabilityModel vm = VariabilityModel.loadFromXML (vmPath);
-            GlobalState.varModel = vm;
-            String outputPath = args [1];
-            List<Tuple<String, String, String>> learnedModels = new List<Tuple<string, string, string>> ();
-            for (int i = 2; i < args.Length; i = i + 3) {
-                learnedModels.Add (new Tuple<string, string, string> (args[i], args[i+1], args[i+2]));
-            }
+			string ymlFilePath = args [0];
 
-            Analyzer.analyzeModels (vm, learnedModels.ToArray(), Path.GetTempFileName(), outputPath);
+			AnalyzerInfo analyzer = YMLParser.ReadInFile (ymlFilePath);
+
+			// Parse the whole population run directory
+			Dictionary<string, CaseStudy> caseStudies = Extractor.ExtractWpInformation (analyzer.WpDirectory, analyzer.CaseStudies);
+
+			// Parse the run directory
+			caseStudies = Extractor.ExtractRunInformation (analyzer.RunDirectory, analyzer.CaseStudies, analyzer.Strategies, analyzer.Sizes, caseStudies);
+
+			// Perform the analysis on all relevant data and print it in a file
+			List<string> sizes = analyzer.Sizes;
+			string directory = null;
+			foreach (string size in sizes) {
+				if (directory == null) {
+					directory = Analyzer.AnalyzeModels (caseStudies, analyzer.Strategies, size);
+				} else {
+					Analyzer.AnalyzeModels (caseStudies, analyzer.Strategies, size, directory);
+				}
+
+				Analyzer.AnalyzeModels (caseStudies, analyzer.Strategies, size, directory, onlyBestModel: false);
+			}
+			Console.WriteLine ("Temporary directory: " + directory);
+
+
+			// TODO: Find a way to handle alternatives
+
+			// TODO: Create the plots (line-plot + box-plots) by using a python script
         }
 
         private static void PrintUsage ()
         {
-            Console.WriteLine ("Usage: <vmPath> <outputPath> (<name> <samplePath> <logPath>)*");
+            Console.WriteLine ("Usage: <pathToYamlFile>");
+			Console.WriteLine ("pathToYamlFile\t The path to the .yml-file where the relevant information for the analysis is stored.");
+			// TODO: Explain content of .yml-file
         }
 
     }

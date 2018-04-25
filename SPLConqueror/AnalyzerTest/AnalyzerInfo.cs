@@ -6,39 +6,22 @@ using System.Threading.Tasks;
 
 namespace AnalyzerTest
 {
-    class AnalyzerInfo
+    public class AnalyzerInfo
     {
-        private string wpDirectory;
-        private string runDirectory;
-        private List<string> caseStudies;
-        private Dictionary<string, string> strategies;
+		public string WpDirectory { get; private set; }
+		public string RunDirectory { get; private set; }
+		public List<string> CaseStudies { get; private set; }
+		public Dictionary<string, string> Strategies { get; private set; }
+		public List<string> Sizes { get; private set; }
 
-        public AnalyzerInfo(string wpDirectory, string runDirectory, List<string> caseStudies, Dictionary<string, string> strategies)
+        public AnalyzerInfo(string wpDirectory, string runDirectory, List<string> caseStudies, 
+		                    Dictionary<string, string> strategies, List<string> sizes)
         {
-            this.wpDirectory = wpDirectory;
-            this.runDirectory = runDirectory;
-            this.caseStudies = caseStudies;
-            this.strategies = strategies;
-        }
-
-        public string GetWpDirectory()
-        {
-            return this.wpDirectory;
-        }
-
-        public string GetRunDirectory()
-        {
-            return this.runDirectory;
-        }
-
-        public List<string> GetCaseStudies()
-        {
-            return this.caseStudies;
-        }
-
-        public Dictionary<string, string> GetStrategies()
-        {
-            return this.strategies;
+			this.WpDirectory = wpDirectory;
+			this.RunDirectory = runDirectory;
+            this.CaseStudies = caseStudies;
+            this.Strategies = strategies;
+			this.Sizes = sizes;
         }
     }
 }

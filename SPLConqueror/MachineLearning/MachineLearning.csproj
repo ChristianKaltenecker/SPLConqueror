@@ -131,7 +131,6 @@
     <Compile Include="Solver\CSPsolver.cs" />
     <Compile Include="Solver\VariantGenerator.cs" />
     <Compile Include="Sampling\ExperimentalDesigns\FactorialDesign.cs" />
-    <Compile Include="Analysis\Analyzer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PyML\ProcessWrapper.csproj">

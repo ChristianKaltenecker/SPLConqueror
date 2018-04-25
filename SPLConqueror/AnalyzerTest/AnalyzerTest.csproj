@@ -28,6 +28,10 @@
     <Compile Include="AnalyzerInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="YMLParser.cs" />
+    <Compile Include="Analyzer.cs" />
+    <Compile Include="Extractor.cs" />
+    <Compile Include="CaseStudy.cs" />
+    <Compile Include="SamplingResults.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MachineLearning\MachineLearning.csproj">
@@ -38,11 +42,16 @@
       <Project>{1F035958-15B1-450A-BFC5-BEBD95376C40}</Project>
       <Name>SPLConqueror_Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\PyML\ProcessWrapper.csproj">
+      <Project>{2BF7A78C-C6F4-4AFB-BE09-48B2B13F45E7}</Project>
+      <Name>ProcessWrapper</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="YamlDotNet">
       <HintPath>..\packages\YamlDotNet.4.3.1\lib\net45\YamlDotNet.dll</HintPath>
     </Reference>
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
