@@ -32,6 +32,7 @@
     <Compile Include="Extractor.cs" />
     <Compile Include="CaseStudy.cs" />
     <Compile Include="SamplingResults.cs" />
+    <Compile Include="utils\LowerUpperBound.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MachineLearning\MachineLearning.csproj">
@@ -55,6 +56,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="utils\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

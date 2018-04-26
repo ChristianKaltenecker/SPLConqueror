@@ -10,9 +10,10 @@ namespace AnalyzerTest
 		public List<Configuration> SamplingSet { get; private set; }
 		public Tuple<string [], double> Model { get; private set; }
 		public double ModelError { get; private set; }
-		private Dictionary<BinaryOption [], double> processedModel = new Dictionary<BinaryOption [], double> ();
+        private Dictionary<BinaryOption [], LowerUpperBound> processedModel = new Dictionary<BinaryOption [], LowerUpperBound> ();
 		private double influenceSum = 0;
 		private double baseInfluence;
+        public Dictionary<BinaryOption, List<BinaryOption>> alternatives = new Dictionary<BinaryOption, List<BinaryOption>>();
 
 
 		public SamplingResults (List<Configuration> configurations, Tuple<string [], double> model)
@@ -41,17 +42,23 @@ namespace AnalyzerTest
         /// </summary>
         /// <returns>The influences of the terms.</returns>
         /// <param name="termPool">The term pool to fetch the right objects.</param>
-		public Dictionary<BinaryOption[], double> RetrieveInfluences (Dictionary<string, BinaryOption []> termPool)
+        public Dictionary<BinaryOption[], LowerUpperBound> RetrieveInfluences (Dictionary<string, BinaryOption []> termPool)
 		{
-			Dictionary<BinaryOption [], double> influences = new Dictionary<BinaryOption [], double> ();
+            Dictionary<BinaryOption [], LowerUpperBound> influences = new Dictionary<BinaryOption [], LowerUpperBound> ();
 
 			foreach (string term in termPool.Keys) {
 				if (term.Equals (Analyzer.BASE)) {
-					influences.Add (termPool [term], Math.Abs(baseInfluence / influenceSum));
+                    LowerUpperBound lup = new LowerUpperBound();
+                    lup.AddElement(baseInfluence);
+                    lup.DivideBy(influenceSum);
+					influences.Add (termPool [term], lup);
 				} else if (processedModel.ContainsKey (termPool [term])) {
-					influences.Add (termPool [term], Math.Abs (processedModel [termPool [term]] / influenceSum));
+                    processedModel[termPool[term]].DivideBy(influenceSum);
+					influences.Add (termPool [term], processedModel [termPool [term]]);
 				} else {
-					influences.Add (termPool [term], 0);
+                    LowerUpperBound lup = new LowerUpperBound();
+                    lup.AddElement(0);
+					influences.Add (termPool [term], lup);
 				}
 			}
 
@@ -65,37 +72,111 @@ namespace AnalyzerTest
         /// <param name="termToCount">The term to search for.</param>
 		public int CountTermEnabledDisabled (BinaryOption [] termToCount)
 		{
-			List<Configuration> selected = new List<Configuration> ();
+            Dictionary<BinaryOption, List<Configuration>> selected = new Dictionary<BinaryOption, List<Configuration>>();
+
 			List<Configuration> toSearch = new List<Configuration> ();
-			int count = 0;
 
-			foreach (Configuration config in SamplingSet) {
-				bool allEnabled = true;
+            List<BinaryOption> nonAlternative = new List<BinaryOption>();
 
-				// TODO: Does this still work?
-				foreach (BinaryOption binOpt in termToCount) {
-					if (!config.getBinaryOptions (BinaryOption.BinaryValue.Selected).Contains (binOpt)) {
-						allEnabled = false;
-					}
-				}
+            // Find out the non-alternative features to exclude them
+            foreach (BinaryOption opt in termToCount) {
+                if (!this.alternatives.ContainsKey(opt)) {
+                    nonAlternative.Add(opt);
+                } 
+            }
 
-				if (allEnabled) {
-					Dictionary<BinaryOption, BinaryOption.BinaryValue> binOpts = config
-						.getBinaryOptions (BinaryOption.BinaryValue.Selected).Except (termToCount)
-						.ToDictionary ((BinaryOption arg) => arg, (BinaryOption arg) => BinaryOption.BinaryValue.Selected);
-					selected.Add (new Configuration (binOpts, new Dictionary<NumericOption, double> ()));
-				} else {
-					toSearch.Add (config);
-				}
-			}
+            foreach (BinaryOption alternativeGroup in this.alternatives.Keys) {
+                selected[alternativeGroup] = new List<Configuration>();
+            }
 
-			foreach (Configuration config in selected) {
-				if (toSearch.Contains (config)) {
-					toSearch.Remove (config);
-					count++;
-				}
-			}
+            for (int i = 0; i < SamplingSet.Count; i++) {
+                Configuration config = SamplingSet[i];
+                List<BinaryOption> allSelectedBinOpts = config.getBinaryOptions(BinaryOption.BinaryValue.Selected);
+                bool allIncluded = true;
+                // First, look if all non-alternatives are included
+                foreach (BinaryOption opt in nonAlternative) {
+                    if (!allSelectedBinOpts.Contains(opt)) {
+                        allIncluded = false;
+                        break;
+                    }
+                }
 
+                // Look if one alternative is included from every alternative group
+                foreach (BinaryOption opt in this.alternatives.Keys) {
+                    bool oneChildIncluded = false;
+                    BinaryOption foundWith = null;
+                    foreach (BinaryOption child in this.alternatives[opt])
+                    {
+                        if (allSelectedBinOpts.Contains(child))
+                        {
+                            foundWith = child;
+                            oneChildIncluded = true;
+                            break;
+                        }
+                    }
+
+                    if (!oneChildIncluded) {
+                        // This shouldn't happen in usual case studies
+                        Console.Error.WriteLine("Configuration with no alternative option detected.");
+                        allIncluded = false;
+                    } else {
+                        // Abort if the configuration was already found with another alternative
+                        List<BinaryOption> configWithOtherOptionEnabled = new List<BinaryOption>(allSelectedBinOpts);
+                        configWithOtherOptionEnabled = configWithOtherOptionEnabled.Except(nonAlternative).ToList();
+                        configWithOtherOptionEnabled.Remove(foundWith);
+                        foreach (BinaryOption otherChild in this.alternatives[opt]) {
+                            if (otherChild != foundWith) {
+                                List<BinaryOption> tmp = new List<BinaryOption>(configWithOtherOptionEnabled);
+
+                                tmp.Add(otherChild);
+                                Configuration newConfig = new Configuration(tmp, new Dictionary<NumericOption, double>());
+                                if (!selected[opt].Contains(newConfig)) {
+                                    selected[opt].Add(newConfig);
+                                } 
+                            }
+                        }   
+                    }
+                    
+                }
+
+                if (!allIncluded) {
+                    toSearch.Add(config);
+                }
+            }
+
+            // Now count them (only once per alternative)
+            int count = 0;
+
+            foreach (BinaryOption opt in selected.Keys)
+            {
+                List<Configuration> toIgnore = new List<Configuration>();
+
+                foreach (Configuration config in selected[opt])
+                {
+                    if (toIgnore.Contains(config)) {
+                        continue;
+                    }
+
+                    if (toSearch.Contains(config))
+                    {
+                        count++;
+                        // If counted, add similar configurations to ignorelist
+                        List<BinaryOption> binOpts = config.getBinaryOptions(BinaryOption.BinaryValue.Selected);
+                        List<BinaryOption> alternatives = this.alternatives[opt];
+                        BinaryOption selectedAlternative = alternatives.Where((BinaryOption arg) => binOpts.Contains(arg)).First();
+                        alternatives.Remove(selectedAlternative);
+
+                        binOpts.Remove(selectedAlternative);
+
+                        foreach (BinaryOption otherAlternative in alternatives) {
+                            List<BinaryOption> tmp = new List<BinaryOption>(binOpts);
+                            tmp.Add(otherAlternative);
+                            toIgnore.Add(new Configuration(tmp, new Dictionary<NumericOption, double>()));
+                        }
+                    }
+                }
+
+            }
 			return count;
 		}
 
@@ -112,9 +193,23 @@ namespace AnalyzerTest
 				List<string> optionStrings = new List<string> ();
 
 				for (int i = 1; i < split.Length; i++) {
-					optionStrings.Add (split [i].Trim ());
 					BinaryOption opt = variabilityModel.getBinaryOption (split [i].Trim ());
-					options.Add (opt);
+
+                    // Add alternatives
+                    if (opt.hasAlternatives()) {
+                        if (!this.alternatives.ContainsKey((BinaryOption) opt.Parent)) {
+                            this.alternatives[(BinaryOption) opt.Parent] = new List<BinaryOption>();
+                        }
+
+                        if (!this.alternatives[(BinaryOption) opt.Parent].Contains(opt)) {
+                            this.alternatives[(BinaryOption)opt.Parent].Add(opt);
+                        }
+                        optionStrings.Add("Group_" + opt.Parent.Name);
+                        options.Add((BinaryOption) opt.Parent);
+                    } else {
+                        optionStrings.Add(split[i].Trim());
+                        options.Add(opt);
+                    }
 				}
 
 				if (termNumber == 0) {
@@ -136,7 +231,14 @@ namespace AnalyzerTest
 					}
 
 					terms.Add (new Tuple<BinaryOption [], double> (allOptsOfTerm, influence));
-					processedModel.Add (allOptsOfTerm, influence);
+
+                    if (processedModel.ContainsKey(allOptsOfTerm)) {
+                        processedModel[allOptsOfTerm].AddElement(influence);
+                    } else {
+                        LowerUpperBound lub = new LowerUpperBound();
+                        lub.AddElement(influence);
+                        processedModel.Add(allOptsOfTerm, lub);    
+                    }
 				}            
 			}
 		}

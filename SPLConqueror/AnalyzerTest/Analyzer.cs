@@ -59,19 +59,19 @@ namespace AnalyzerTest
 				}
 
 				// Stage 2: Retrieve the influences of all terms
-				Dictionary<BinaryOption[], double> wpInfluences = caseStudy.AllConfigurations.RetrieveInfluences (termPool);
+                Dictionary<BinaryOption[], LowerUpperBound> wpInfluences = caseStudy.AllConfigurations.RetrieveInfluences (termPool);
 
-				Dictionary<string, Dictionary<string, Dictionary<BinaryOption [], double>>> strategyInfluences = new Dictionary<string, Dictionary<string, Dictionary<BinaryOption [], double>>> ();
+                Dictionary<string, Dictionary<string, Dictionary<BinaryOption [], LowerUpperBound>>> strategyInfluences = new Dictionary<string, Dictionary<string, Dictionary<BinaryOption [], LowerUpperBound>>> ();
 
 				if (onlyBestModel) {
 					foreach (string strategy in strategies.Keys) {
 						SamplingResults info = caseStudy.BestSampleInfo [size] [strategy];
-						strategyInfluences [strategy] = new Dictionary<string, Dictionary<BinaryOption [], double>> ();                  
+                        strategyInfluences [strategy] = new Dictionary<string, Dictionary<BinaryOption [], LowerUpperBound>> ();                  
 						strategyInfluences [strategy] ["best"] = info.RetrieveInfluences (termPool);
 					}
 				} else {
 					foreach (string strategy in strategies.Keys) {
-						strategyInfluences [strategy] = new Dictionary<string, Dictionary<BinaryOption [], double>> ();
+                        strategyInfluences [strategy] = new Dictionary<string, Dictionary<BinaryOption [], LowerUpperBound>> ();
 						foreach (string run in caseStudy.SampleInfo [size] [strategy].Keys) {
 							SamplingResults info = caseStudy.SampleInfo [size] [strategy] [run];                     
 							strategyInfluences [strategy] [run] = info.RetrieveInfluences (termPool);
@@ -120,7 +120,7 @@ namespace AnalyzerTest
 				// Create the order in which the terms should be printed
 				List<BinaryOption []> binOptionOrder = new List<BinaryOption []> ();
 				var optionOrder = wpInfluences.OrderBy (x => x.Key.Length).ThenBy (x => x.Value).ToList();
-				foreach (KeyValuePair<BinaryOption [], double> option in optionOrder) {
+                foreach (KeyValuePair<BinaryOption [], LowerUpperBound> option in optionOrder) {
 					binOptionOrder.Add (option.Key);
 				}
 
@@ -186,8 +186,8 @@ namespace AnalyzerTest
 		private static string InfluenceResultsToString (List<BinaryOption []> optionOrder, CaseStudy caseStudy, string size,
 		                                                Dictionary<string, BinaryOption[]> termPool,
                                                         Dictionary<string, string> strategies,
-        		                                        Dictionary<BinaryOption[], double> wpInfluences, 
-        		                                        Dictionary<string, Dictionary<string, Dictionary<BinaryOption [], double>>> strategyInfluences)
+                                                        Dictionary<BinaryOption[], LowerUpperBound> wpInfluences, 
+                                                        Dictionary<string, Dictionary<string, Dictionary<BinaryOption [], LowerUpperBound>>> strategyInfluences)
 		{
 			StringBuilder stringBuilder = new StringBuilder ();
 			stringBuilder.Append(CreateHeader (caseStudy, strategies, size));
@@ -196,23 +196,16 @@ namespace AnalyzerTest
 			foreach (BinaryOption [] option in optionOrder) {
 				// Find the string representation
 				string term = termPool.FirstOrDefault (x => x.Value.Equals (option)).Key;         
-
-				stringBuilder.Append(term);
-				stringBuilder.Append (CSV_ELEMENT_SEPARATOR);
-				stringBuilder.Append (1);
-				stringBuilder.Append (CSV_ELEMENT_SEPARATOR);
-				stringBuilder.Append (wpInfluences [option]);
-				stringBuilder.Append (CSV_ROW_SEPARATOR);
+                stringBuilder.Append(WriteBound(term + CSV_ELEMENT_SEPARATOR + 1 + CSV_ELEMENT_SEPARATOR,
+                                                wpInfluences[option],
+                                                CSV_ROW_SEPARATOR));
 
 				int idCounter = 2;
 				foreach (string strategy in strategies.Keys) {
 					foreach (string run in (strategyInfluences [strategy].Keys)) {
-						stringBuilder.Append (term);
-						stringBuilder.Append (CSV_ELEMENT_SEPARATOR);
-						stringBuilder.Append (idCounter);
-						stringBuilder.Append (CSV_ELEMENT_SEPARATOR);
-						stringBuilder.Append (strategyInfluences [strategy] [run] [option]);
-						stringBuilder.Append (CSV_ROW_SEPARATOR);
+                        stringBuilder.Append(WriteBound(term + CSV_ELEMENT_SEPARATOR + idCounter + CSV_ELEMENT_SEPARATOR,
+                                                        strategyInfluences[strategy] [run] [option],
+                                                        CSV_ROW_SEPARATOR));
 					}
 					idCounter++;
 				}            
@@ -224,6 +217,20 @@ namespace AnalyzerTest
 
 			return stringBuilder.ToString();
 		}
+
+        private static string WriteBound(string prefix, LowerUpperBound lup, string sufix) {
+            StringBuilder sb = new StringBuilder();
+                sb.Append(prefix);
+                sb.Append(lup.LowerBound);
+                sb.Append(sufix);
+            if (lup.LowerBound != lup.UpperBound) {
+                sb.Append(prefix);
+                sb.Append(lup.UpperBound);
+                sb.Append(sufix);
+            }
+
+            return sb.ToString();
+        }
 
 		private static string CountResultsToString (List<BinaryOption []> optionOrder, CaseStudy caseStudy, string size, 
 					                                Dictionary<string, BinaryOption []> termPool,

@@ -1,5 +1,5 @@
-wpDirectory: /localhome/Repositories/Distance-Based_Data/Results/RawData_Summary
-runDirectory: /localhome/Repositories/Distance-Based_Data/Results/RawData
+wpDirectory: /home/thoril/Uni/Distance-Based_Data/Results/RawData_Summary
+runDirectory: /home/thoril/Uni/Distance-Based_Data/Results/RawData
 sizes:
    - 0
 caseStudies:
