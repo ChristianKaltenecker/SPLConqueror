@@ -469,8 +469,8 @@ namespace SPLConqueror_Core
 
             StreamReader sr = new StreamReader(file);
             
-            String[] optionOrder = new String[model.getOptions().Count - 1];
-            String[] nfpOrder = null;
+			List<String> optionOrder = new List<String>();
+			List<String> nfpOrder = new List<String>();
 
             bool isHeader = true;
 
@@ -480,17 +480,16 @@ namespace SPLConqueror_Core
 
                 if (isHeader)
                 {
-                    nfpOrder = new String[tokens.Length - optionOrder.Length];
                     for (int i = 0; i < tokens.Length; i++)
                     {
                         String token = tokens[i];
-                        if (i < optionOrder.Length)
+						if (model.getOption(token) != null)
                         {
-                            optionOrder[i] = token;
+							optionOrder.Add(token);
                         }
                         else
                         {
-                            nfpOrder[i - optionOrder.Length] = token;
+							nfpOrder.Add(token);
                             if (!GlobalState.nfProperties.ContainsKey(token))
                             {
                                 GlobalState.nfProperties.Add(token, new NFProperty(token));
@@ -508,7 +507,7 @@ namespace SPLConqueror_Core
                     for (int i = 0; i < tokens.Length; i++)
                     {
                         String token = tokens[i];
-                        if (i < optionOrder.Length)
+						if (i < optionOrder.Count)
                         {
                             ConfigurationOption option = model.getOption(optionOrder[i]);
                             if (option.GetType() == typeof(BinaryOption))
@@ -524,7 +523,7 @@ namespace SPLConqueror_Core
                         }
                         else
                         {
-                            NFProperty nfp = GlobalState.nfProperties[nfpOrder[i - optionOrder.Length]];
+                            NFProperty nfp = GlobalState.nfProperties[nfpOrder[i - optionOrder.Count]];
                             double value = Convert.ToDouble(token);
                             properties.Add(nfp, value);
 
