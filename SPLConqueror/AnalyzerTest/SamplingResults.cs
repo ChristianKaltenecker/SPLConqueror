@@ -78,6 +78,11 @@ namespace AnalyzerTest
 
             List<BinaryOption> nonAlternative = new List<BinaryOption>();
 
+			// Filter the base feature
+			if (termToCount.Length == 0) {
+				return SamplingSet.Count;
+			}
+
             // Find out the non-alternative features to exclude them
             foreach (BinaryOption opt in termToCount) {
                 if (!this.alternatives.ContainsKey(opt)) {
@@ -101,6 +106,11 @@ namespace AnalyzerTest
                     }
                 }
 
+				if (!allIncluded) {
+					toSearch.Add (config);
+					continue;
+				}
+
                 // Look if one alternative is included from every alternative group
                 foreach (BinaryOption opt in this.alternatives.Keys) {
                     bool oneChildIncluded = false;
@@ -120,7 +130,6 @@ namespace AnalyzerTest
                         Console.Error.WriteLine("Configuration with no alternative option detected.");
                         allIncluded = false;
                     } else {
-                        // Abort if the configuration was already found with another alternative
                         List<BinaryOption> configWithOtherOptionEnabled = new List<BinaryOption>(allSelectedBinOpts);
                         configWithOtherOptionEnabled = configWithOtherOptionEnabled.Except(nonAlternative).ToList();
                         configWithOtherOptionEnabled.Remove(foundWith);
@@ -132,14 +141,14 @@ namespace AnalyzerTest
                                 Configuration newConfig = new Configuration(tmp, new Dictionary<NumericOption, double>());
                                 if (!selected[opt].Contains(newConfig)) {
                                     selected[opt].Add(newConfig);
-                                } 
+                                }
                             }
                         }   
                     }
                     
                 }
 
-                if (!allIncluded) {
+				if (!allIncluded || nonAlternative.Count == 0) {
                     toSearch.Add(config);
                 }
             }
@@ -162,9 +171,9 @@ namespace AnalyzerTest
                         count++;
                         // If counted, add similar configurations to ignorelist
                         List<BinaryOption> binOpts = config.getBinaryOptions(BinaryOption.BinaryValue.Selected);
-                        List<BinaryOption> alternatives = this.alternatives[opt];
+						List<BinaryOption> alternatives = new List<BinaryOption>(this.alternatives[opt]);
                         BinaryOption selectedAlternative = alternatives.Where((BinaryOption arg) => binOpts.Contains(arg)).First();
-                        alternatives.Remove(selectedAlternative);
+						alternatives.Remove (selectedAlternative);
 
                         binOpts.Remove(selectedAlternative);
 
@@ -199,11 +208,12 @@ namespace AnalyzerTest
                     if (opt.hasAlternatives()) {
                         if (!this.alternatives.ContainsKey((BinaryOption) opt.Parent)) {
                             this.alternatives[(BinaryOption) opt.Parent] = new List<BinaryOption>();
+							this.alternatives [(BinaryOption)opt.Parent].Add (opt);
+							foreach (ConfigurationOption configOption in opt.collectAlternativeOptions()) {
+								this.alternatives [(BinaryOption)opt.Parent].Add ((BinaryOption) configOption);
+							}                     
                         }
-
-                        if (!this.alternatives[(BinaryOption) opt.Parent].Contains(opt)) {
-                            this.alternatives[(BinaryOption)opt.Parent].Add(opt);
-                        }
+                        
                         optionStrings.Add("Group_" + opt.Parent.Name);
                         options.Add((BinaryOption) opt.Parent);
                     } else {
