@@ -53,33 +53,35 @@ def plot(file_path: str, inputPaths: Dict[str, str], onlyBest: bool = True) -> N
 
     # Generate the plot
     rcParams.update({'figure.autolayout': True})
+    sns.set(font_scale=0.5, style="whitegrid")
 
     if onlyBest:
         plt.figure(figsize=(11.69, HEIGHT))
         df = info["inf"]
 
         wp_influence = df[df["Strategy"] == strategy_list[0]]
-        ticks = wp_influence["Term"]
+        ticks = wp_influence["Term"].unique()
 
-        pivot_table = df.pivot(index="Term", columns="Strategy", values="Result")
-        pivot_table = pivot_table.reindex(ticks)
-        ax = pivot_table.plot(kind='bar')
-        ax.set_ylim([0, 1])
-        ax.set_xticks(range(len(ticks)))
+        ax = sns.factorplot(x="Term", y="Result", hue="Strategy", legend=False, data=df, kind="box")
         ax.set_xticklabels(ticks, rotation=90)
 
-        plt.savefig(filename + "_1" + sufix)
+        ax.despine(left=True)
+        plt.legend(loc='upper left')
+
+        plt.savefig(filename + "_1" + sufix, bbox_inches='tight')
         plt.close()
 
         plt.figure(figsize=(11.69, HEIGHT))
 
         df = info["freq"]
 
-        pivot_table = df.pivot(index="Term", columns="Strategy", values="Result")
-        pivot_table = pivot_table.reindex(ticks)
-        ax = pivot_table.plot(kind='bar')
-        ax.set_ylim([0, max(df["Result"]) + 0.01 * max(df["Result"])])
-        ax.set_xticks(range(len(ticks)))
+        ax = sns.factorplot(x="Term", y="Result", hue="Strategy", legend=False, data=df, kind="bar")
+
+        ax.set_xticklabels(ticks, rotation=90)
+
+        ax.despine(left=True)
+        plt.legend(loc='upper right')
+
         plt.savefig(filename + "_2" + sufix)
         plt.close()
     else:
@@ -89,15 +91,12 @@ def plot(file_path: str, inputPaths: Dict[str, str], onlyBest: bool = True) -> N
         wp_influence = df[df["Strategy"] == strategy_list[0]]
         ticks = wp_influence["Term"]
 
-        df = df[df["Strategy"] != strategy_list[0]]
-
-        #pivot_table = df.pivot(index="Term", columns="Strategy", values="Result")
-        #pivot_table = pivot_table.reindex(ticks)
-
-        #wp_influence.plot(kind='bar')
-        ax = sns.factorplot(x="Term", y="Result" , hue="Strategy", data=df, legend=True, kind="violin")
+        ax = sns.factorplot(x="Term", y="Result" , hue="Strategy", legend=False, data=df, kind="box")
 
         ax.set_xticklabels(ticks, rotation=90)
+
+        ax.despine(left=True)
+        plt.legend(loc='upper right')
 
         plt.savefig(filename + "_1" + sufix)
         plt.close()
@@ -108,15 +107,12 @@ def plot(file_path: str, inputPaths: Dict[str, str], onlyBest: bool = True) -> N
         wp_influence = df[df["Strategy"] == strategy_list[0]]
         ticks = wp_influence["Term"]
 
-        df = df[df["Strategy"] != strategy_list[0]]
-
-        # pivot_table = df.pivot(index="Term", columns="Strategy", values="Result")
-        # pivot_table = pivot_table.reindex(ticks)
-
-        # wp_influence.plot(kind='bar')
-        ax = sns.factorplot(x="Term", y="Result", hue="Strategy", data=df, legend=True, kind="violin")
+        ax = sns.factorplot(x="Term", y="Result", hue="Strategy", data=df, legend=False, kind="box")
 
         ax.set_xticklabels(ticks, rotation=90)
+
+        ax.despine(left=True)
+        plt.legend(loc='upper right')
 
         plt.savefig(filename + "_2" + sufix)
         plt.close()

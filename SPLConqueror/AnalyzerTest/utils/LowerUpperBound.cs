@@ -16,13 +16,14 @@ namespace AnalyzerTest
 
         public void AddElement(double element) {
             elements.Add(element);
-            if (LowerBound == null) {
-                LowerBound = element;
-                UpperBound = element;
-            } else if (element.CompareTo(UpperBound) > 0) {
-                UpperBound = element;
-            } else if (element.CompareTo(LowerBound) < 0) {
-                LowerBound = element;
+			double elementToCompare = Math.Abs (element);
+            if (LowerBound == 0) {
+				LowerBound = elementToCompare;
+                UpperBound = elementToCompare;
+            } else if (elementToCompare.CompareTo(UpperBound) > 0) {
+                UpperBound = elementToCompare;
+            } else if (elementToCompare.CompareTo(LowerBound) < 0) {
+                LowerBound = elementToCompare;
             }
         }
 

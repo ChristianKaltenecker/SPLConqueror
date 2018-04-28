@@ -70,7 +70,7 @@ namespace AnalyzerTest
         /// </summary>
         /// <returns>The number of configurations where the features from the term are disabled and enabled.</returns>
         /// <param name="termToCount">The term to search for.</param>
-		public int CountTermEnabledDisabled (BinaryOption [] termToCount)
+		public double CountTermEnabledDisabled (BinaryOption [] termToCount)
 		{
             Dictionary<BinaryOption, List<Configuration>> selected = new Dictionary<BinaryOption, List<Configuration>>();
 
@@ -80,7 +80,7 @@ namespace AnalyzerTest
 
 			// Filter the base feature
 			if (termToCount.Length == 0) {
-				return SamplingSet.Count;
+				return 1;
 			}
 
             // Find out the non-alternative features to exclude them
@@ -186,7 +186,7 @@ namespace AnalyzerTest
                 }
 
             }
-			return count;
+			return count / SamplingSet.Count;
 		}
 
 		private void ProcessModel (Dictionary<string, BinaryOption []> termPool, VariabilityModel variabilityModel)

@@ -80,8 +80,8 @@ namespace AnalyzerTest
 				}
 
 				// Stage 3: Count the times where only the configuration options from the terms are enabled and disabled
-				Dictionary<BinaryOption[], int> wpCount = new Dictionary<BinaryOption[], int>();
-				Dictionary<string, Dictionary<string, Dictionary<BinaryOption [], int>>> strategyCount = new Dictionary<string, Dictionary<string, Dictionary<BinaryOption [], int>>> ();
+				Dictionary<BinaryOption[], double> wpCount = new Dictionary<BinaryOption[], double>();
+				Dictionary<string, Dictionary<string, Dictionary<BinaryOption [], double>>> strategyCount = new Dictionary<string, Dictionary<string, Dictionary<BinaryOption [], double>>> ();
 				foreach (string term in termPool.Keys) {
 					wpCount [termPool [term]] = caseStudy.AllConfigurations.CountTermEnabledDisabled (termPool [term]);
 
@@ -89,10 +89,10 @@ namespace AnalyzerTest
 						if (onlyBestModel) {
 							foreach (string strategy in strategies.Keys) {
 								if (!strategyCount.ContainsKey (strategy)) {
-									strategyCount [strategy] = new Dictionary<string, Dictionary<BinaryOption [], int>> ();
+									strategyCount [strategy] = new Dictionary<string, Dictionary<BinaryOption [], double>> ();
 								}
 								if (!strategyCount [strategy].ContainsKey ("best")) {
-									strategyCount [strategy] ["best"] = new Dictionary<BinaryOption [], int> ();
+									strategyCount [strategy] ["best"] = new Dictionary<BinaryOption [], double> ();
 								}
 
 								strategyCount [strategy] ["best"] [termPool [term]] = caseStudy.BestSampleInfo [size] [strategy].CountTermEnabledDisabled (termPool [term]);
@@ -101,10 +101,10 @@ namespace AnalyzerTest
 							foreach (string strategy in strategies.Keys) {
 								foreach (string run in caseStudy.SampleInfo [size] [strategy].Keys) {
 									if (!strategyCount.ContainsKey (strategy)) {
-										strategyCount [strategy] = new Dictionary<string, Dictionary<BinaryOption [], int>> ();
+										strategyCount [strategy] = new Dictionary<string, Dictionary<BinaryOption [], double>> ();
 									}
 									if (!strategyCount [strategy].ContainsKey (run)) {
-                                        strategyCount [strategy] [run] = new Dictionary<BinaryOption [], int> ();
+                                        strategyCount [strategy] [run] = new Dictionary<BinaryOption [], double> ();
                                     }
 
 									strategyCount [strategy] [run] [termPool [term]] = caseStudy.BestSampleInfo [size] [strategy].CountTermEnabledDisabled (termPool [term]);
@@ -119,7 +119,7 @@ namespace AnalyzerTest
 
 				// Create the order in which the terms should be printed
 				List<BinaryOption []> binOptionOrder = new List<BinaryOption []> ();
-				var optionOrder = wpInfluences.OrderBy (x => x.Key.Length).ThenBy (x => x.Value).ToList();
+				var optionOrder = wpInfluences.OrderBy (x => x.Key.Length).ThenBy (x => x.Value.LowerBound).ToList();
                 foreach (KeyValuePair<BinaryOption [], LowerUpperBound> option in optionOrder) {
 					binOptionOrder.Add (option.Key);
 				}
@@ -235,8 +235,8 @@ namespace AnalyzerTest
 		private static string CountResultsToString (List<BinaryOption []> optionOrder, CaseStudy caseStudy, string size, 
 					                                Dictionary<string, BinaryOption []> termPool,
                                                     Dictionary<string, string> strategies,
-    											    Dictionary<BinaryOption [], int> wpCount,
-    											    Dictionary<string, Dictionary<string, Dictionary<BinaryOption [], int>>> strategyCount)
+    											    Dictionary<BinaryOption [], double> wpCount,
+    											    Dictionary<string, Dictionary<string, Dictionary<BinaryOption [], double>>> strategyCount)
 		{
 			StringBuilder stringBuilder = new StringBuilder ();
             stringBuilder.Append (CreateHeader (caseStudy, strategies, size));

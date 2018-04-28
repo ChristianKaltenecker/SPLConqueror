@@ -1,9 +1,13 @@
-wpDirectory: /home/thoril/Uni/Distance-Based_Data/Results/RawData_Summary
-runDirectory: /home/thoril/Uni/Distance-Based_Data/Results/RawData
+wpDirectory: /localhome/Repositories/Distance-Based_Data/Results/RawData_Summary
+runDirectory: /localhome/Repositories/Distance-Based_Data/Results/RawData
 sizes:
    - 0
+   - 1
+   - 2
 caseStudies:
    - BerkeleyDBC
+   - 7z
+   - VP9
 strategies:
    locOpt: Local optimization
    rand: Random
