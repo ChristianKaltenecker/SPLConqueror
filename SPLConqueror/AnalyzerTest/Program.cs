@@ -31,6 +31,7 @@ namespace AnalyzerTest
 			List<string> sizes = analyzer.Sizes;
 			string directory = null;
 			foreach (string size in sizes) {
+                Console.WriteLine("Size: " + size);
 				if (directory == null) {
 					directory = Analyzer.AnalyzeModels (caseStudies, analyzer.Strategies, size);
 				} else {
@@ -41,8 +42,6 @@ namespace AnalyzerTest
 			}
 			Console.WriteLine ("Temporary directory: " + directory);
 
-
-			// TODO: Find a way to handle alternatives
 
 			// TODO: Create the plots (line-plot + box-plots) by using a python script
         }

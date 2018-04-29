@@ -5,6 +5,8 @@ using System.Linq;
 using System.IO;
 using System.Text;
 using ProcessWrapper;
+using System.Diagnostics;
+using System.Threading;
 
 namespace AnalyzerTest
 {
@@ -30,6 +32,10 @@ namespace AnalyzerTest
 			}
 
 			foreach (string caseStudyName in caseStudyResults.Keys) {
+                Console.WriteLine("Case Study: " + caseStudyName);
+                Stopwatch stopWatch = new Stopwatch();
+                stopWatch.Start();
+
 				CaseStudy caseStudy = caseStudyResults [caseStudyName];
 
 				// Stage 1: Search for the terms that were included by machine learning
@@ -140,6 +146,9 @@ namespace AnalyzerTest
 				// And the count results afterwards
 				content = CountResultsToString (binOptionOrder, caseStudy, size, termPool, strategies, wpCount, strategyCount);
 				writeToFile (Path.Combine (path, fileName + FREQUENCY + Extractor.CSV_SUFIX), content);
+
+                stopWatch.Stop();
+                Console.WriteLine("Elapsed Time: " + stopWatch.Elapsed);
 			}
 
             // Return the path to the directory including the results
