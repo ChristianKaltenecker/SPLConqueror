@@ -72,11 +72,13 @@ namespace AnalyzerTest
         /// <param name="termToCount">The term to search for.</param>
 		public double CountTermEnabledDisabled (BinaryOption [] termToCount)
 		{
+            List<Configuration> selectedWithoutAlternatives = new List<Configuration>();
             Dictionary<BinaryOption, List<Configuration>> selected = new Dictionary<BinaryOption, List<Configuration>>();
 
 			List<Configuration> toSearch = new List<Configuration> ();
 
             List<BinaryOption> nonAlternative = new List<BinaryOption>();
+            List<BinaryOption> alternativesInTerm = new List<BinaryOption>();
 
 			// Filter the base feature
 			if (termToCount.Length == 0) {
@@ -87,10 +89,12 @@ namespace AnalyzerTest
             foreach (BinaryOption opt in termToCount) {
                 if (!this.alternatives.ContainsKey(opt)) {
                     nonAlternative.Add(opt);
-                } 
+                } else {
+                    alternativesInTerm.Add(opt);
+                }
             }
 
-            foreach (BinaryOption alternativeGroup in this.alternatives.Keys) {
+            foreach (BinaryOption alternativeGroup in alternativesInTerm) {
                 selected[alternativeGroup] = new List<Configuration>();
             }
 
@@ -109,10 +113,16 @@ namespace AnalyzerTest
 				if (!allIncluded) {
 					toSearch.Add (config);
 					continue;
-				}
+				} else if (allIncluded && alternativesInTerm.Count == 0) {
+                    // Add it if there are no alternatives in the term
+                    foreach (BinaryOption opt in nonAlternative) {
+                        allSelectedBinOpts.Remove(opt);
+                    }
+                    selectedWithoutAlternatives.Add(new Configuration(allSelectedBinOpts, new Dictionary<NumericOption, double>()));
+                }
 
                 // Look if one alternative is included from every alternative group
-                foreach (BinaryOption opt in this.alternatives.Keys) {
+                foreach (BinaryOption opt in alternativesInTerm) {
                     bool oneChildIncluded = false;
                     BinaryOption foundWith = null;
                     foreach (BinaryOption child in this.alternatives[opt])
@@ -156,35 +166,50 @@ namespace AnalyzerTest
             // Now count them (only once per alternative)
             int count = 0;
 
-            foreach (BinaryOption opt in selected.Keys)
+            if (selected.Keys.Count == 0)
             {
-                List<Configuration> toIgnore = new List<Configuration>();
-
-                foreach (Configuration config in selected[opt])
-                {
-                    if (toIgnore.Contains(config)) {
-                        continue;
-                    }
-
-                    if (toSearch.Contains(config))
-                    {
+                // Look only for the selected configurations
+                foreach (Configuration sel in selectedWithoutAlternatives) {
+                    if (toSearch.Contains(sel)) {
                         count++;
-                        // If counted, add similar configurations to ignorelist
-                        List<BinaryOption> binOpts = config.getBinaryOptions(BinaryOption.BinaryValue.Selected);
-						List<BinaryOption> alternatives = new List<BinaryOption>(this.alternatives[opt]);
-                        BinaryOption selectedAlternative = alternatives.Where((BinaryOption arg) => binOpts.Contains(arg)).First();
-						alternatives.Remove (selectedAlternative);
-
-                        binOpts.Remove(selectedAlternative);
-
-                        foreach (BinaryOption otherAlternative in alternatives) {
-                            List<BinaryOption> tmp = new List<BinaryOption>(binOpts);
-                            tmp.Add(otherAlternative);
-                            toIgnore.Add(new Configuration(tmp, new Dictionary<NumericOption, double>()));
-                        }
                     }
                 }
 
+            }
+            else
+            {
+                foreach (BinaryOption opt in selected.Keys)
+                {
+                    List<Configuration> toIgnore = new List<Configuration>();
+
+                    foreach (Configuration config in selected[opt])
+                    {
+                        if (toIgnore.Contains(config))
+                        {
+                            continue;
+                        }
+
+                        if (toSearch.Contains(config))
+                        {
+                            count++;
+                            // If counted, add similar configurations to ignorelist
+                            List<BinaryOption> binOpts = config.getBinaryOptions(BinaryOption.BinaryValue.Selected);
+                            List<BinaryOption> alternatives = new List<BinaryOption>(this.alternatives[opt]);
+                            BinaryOption selectedAlternative = alternatives.Where((BinaryOption arg) => binOpts.Contains(arg)).First();
+                            alternatives.Remove(selectedAlternative);
+
+                            binOpts.Remove(selectedAlternative);
+
+                            foreach (BinaryOption otherAlternative in alternatives)
+                            {
+                                List<BinaryOption> tmp = new List<BinaryOption>(binOpts);
+                                tmp.Add(otherAlternative);
+                                toIgnore.Add(new Configuration(tmp, new Dictionary<NumericOption, double>()));
+                            }
+                        }
+                    }
+
+                }
             }
 			return count * 1.0d / SamplingSet.Count;
 		}
