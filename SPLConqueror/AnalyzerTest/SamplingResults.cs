@@ -186,7 +186,7 @@ namespace AnalyzerTest
                 }
 
             }
-			return count / SamplingSet.Count;
+			return count * 1.0d / SamplingSet.Count;
 		}
 
 		private void ProcessModel (Dictionary<string, BinaryOption []> termPool, VariabilityModel variabilityModel)
