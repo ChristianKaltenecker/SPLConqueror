@@ -62,8 +62,12 @@ def plot(file_path: str, inputPaths: Dict[str, str], onlyBest: bool = True) -> N
         wp_influence = df[df["Strategy"] == strategy_list[0]]
         ticks = wp_influence["Term"].unique()
 
+        df["Result"] = df["Result"] * 100
+
         ax = sns.factorplot(x="Term", y="Result", hue="Strategy", legend=False, data=df, kind="box")
         ax.set_xticklabels(ticks, rotation=90)
+
+        ax.set_ylabels("Relative Influence [in %]")
 
         ax.despine(left=True)
         plt.legend(loc='upper left')
@@ -75,9 +79,12 @@ def plot(file_path: str, inputPaths: Dict[str, str], onlyBest: bool = True) -> N
 
         df = info["freq"]
 
+        df["Result"] = df["Result"] * 100
+
         ax = sns.factorplot(x="Term", y="Result", hue="Strategy", legend=False, data=df, kind="bar")
 
         ax.set_xticklabels(ticks, rotation=90)
+        ax.set_ylabels("Relative Frequency [in %]")
 
         ax.despine(left=True)
         plt.legend(loc='upper right')
@@ -88,12 +95,15 @@ def plot(file_path: str, inputPaths: Dict[str, str], onlyBest: bool = True) -> N
         plt.figure(figsize=(11.69, HEIGHT))
         df = info["inf"]
 
+        df["Result"] = df["Result"] * 100
+
         wp_influence = df[df["Strategy"] == strategy_list[0]]
         ticks = wp_influence["Term"]
 
         ax = sns.factorplot(x="Term", y="Result" , hue="Strategy", legend=False, data=df, kind="box")
 
         ax.set_xticklabels(ticks, rotation=90)
+        ax.set_ylabels("Relative Influence [in %]")
 
         ax.despine(left=True)
         plt.legend(loc='upper right')
@@ -104,12 +114,15 @@ def plot(file_path: str, inputPaths: Dict[str, str], onlyBest: bool = True) -> N
         plt.figure(figsize=(11.69, HEIGHT))
         df = info["freq"]
 
+        df["Result"] = df["Result"] * 100
+
         wp_influence = df[df["Strategy"] == strategy_list[0]]
         ticks = wp_influence["Term"]
 
         ax = sns.factorplot(x="Term", y="Result", hue="Strategy", data=df, legend=False, kind="box")
 
         ax.set_xticklabels(ticks, rotation=90)
+        ax.set_ylabels("Relative Frequency [in %]")
 
         ax.despine(left=True)
         plt.legend(loc='upper right')
@@ -159,6 +172,7 @@ def main():
     files: Dict[str, Dict[str, Dict[str, Dict]]] = collect_files(path)
 
     for case_study in files.keys():
+        print(case_study)
         for size in files[case_study].keys():
             for kind in files[case_study][size].keys():
                 # Only best
