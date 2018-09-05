@@ -124,6 +124,8 @@
     <Compile Include="Sampling\Hybrid\Distributive\DistanceMetric\ManhattanDistance.cs" />
     <Compile Include="Sampling\Hybrid\Distributive\DistributionSensitive.cs" />
     <Compile Include="Sampling\Hybrid\Distributive\Distribution\IDistribution.cs" />
+    <Compile Include="Sampling\Hybrid\Distributive\Distribution\InverseGeometricDistribution.cs" />
+    <Compile Include="Sampling\Hybrid\Distributive\Distribution\TwoSidedGeometricDistribution.cs" />
     <Compile Include="Sampling\Hybrid\Distributive\Distribution\UniformDistribution.cs" />
     <Compile Include="Sampling\Hybrid\Distributive\DistributionAware.cs" />
     <Compile Include="Sampling\Hybrid\Distributive\DistributionPreserving.cs" />

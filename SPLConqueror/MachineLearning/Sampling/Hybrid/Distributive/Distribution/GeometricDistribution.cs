@@ -11,7 +11,7 @@ namespace MachineLearning.Sampling.Hybrid.Distributive
         const double PROBABILITY = 0.50;
 
         /// <summary>
-        /// See <see cref="Distribution.CreateDistribution(List{double})"/>.
+        /// See <see cref="IDistribution.CreateDistribution(List{double})"/>.
         /// </summary>
         public Dictionary<double, double> CreateDistribution(List<double> allBuckets)
         {
@@ -29,7 +29,7 @@ namespace MachineLearning.Sampling.Hybrid.Distributive
         }
 
         /// <summary>
-        /// See <see cref="Distribution.GetName"/>.
+        /// See <see cref="IDistribution.GetName"/>.
         /// </summary>
         public string GetName()
         {

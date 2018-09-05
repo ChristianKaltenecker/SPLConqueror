@@ -11,7 +11,7 @@ namespace MachineLearning.Sampling.Hybrid.Distributive
         static Func<int, double> Factorial = x => x < 0 ? -1 : x == 1 || x == 0 ? 1.0 : x * Factorial(x - 1);
 
         /// <summary>
-        /// See <see cref="Distribution.CreateDistribution(List{double})"/>.
+        /// See <see cref="IDistribution.CreateDistribution(List{double})"/>.
         /// </summary>
         public Dictionary<double, double> CreateDistribution(List<double> allBuckets)
         {
@@ -36,7 +36,7 @@ namespace MachineLearning.Sampling.Hybrid.Distributive
         }
 
         /// <summary>
-        /// See <see cref="Distribution.GetName"/>.
+        /// See <see cref="IDistribution.GetName"/>.
         /// </summary>
         public string GetName()
         {
