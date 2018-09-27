@@ -20,6 +20,7 @@ namespace AnalyzerTest
 			string ymlFilePath = args [0];
 
 			AnalyzerInfo analyzer = YMLParser.ReadInFile (ymlFilePath);
+			Console.WriteLine ("Parsed the configuration file");
 
 			// Parse the whole population run directory
 			Dictionary<string, CaseStudy> caseStudies = Extractor.ExtractWpInformation (analyzer.WpDirectory, analyzer.CaseStudies);

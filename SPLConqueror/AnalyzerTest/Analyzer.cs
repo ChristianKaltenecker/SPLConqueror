@@ -85,11 +85,11 @@ namespace AnalyzerTest
                     }
 				}
 
-				// Stage 3: Count the times where only the configuration options from the terms are enabled and disabled
+				// Stage 3: Count the times where only the configuration options from the terms are enabled
 				Dictionary<BinaryOption[], double> wpCount = new Dictionary<BinaryOption[], double>();
 				Dictionary<string, Dictionary<string, Dictionary<BinaryOption [], double>>> strategyCount = new Dictionary<string, Dictionary<string, Dictionary<BinaryOption [], double>>> ();
 				foreach (string term in termPool.Keys) {
-					wpCount [termPool [term]] = caseStudy.AllConfigurations.CountTermEnabledDisabled (termPool [term]);
+					wpCount [termPool [term]] = caseStudy.AllConfigurations.CountTermEnabled (termPool [term]);
 
 					if (!onlyWP) {
 						if (onlyBestModel) {
@@ -101,7 +101,7 @@ namespace AnalyzerTest
 									strategyCount [strategy] ["best"] = new Dictionary<BinaryOption [], double> ();
 								}
 
-								strategyCount [strategy] ["best"] [termPool [term]] = caseStudy.BestSampleInfo [size] [strategy].CountTermEnabledDisabled (termPool [term]);
+								strategyCount [strategy] ["best"] [termPool [term]] = caseStudy.BestSampleInfo [size] [strategy].CountTermEnabled (termPool [term]);
 							}
 						} else {
 							foreach (string strategy in strategies.Keys) {
@@ -113,12 +113,14 @@ namespace AnalyzerTest
                                         strategyCount [strategy] [run] = new Dictionary<BinaryOption [], double> ();
                                     }
 
-									strategyCount [strategy] [run] [termPool [term]] = caseStudy.BestSampleInfo [size] [strategy].CountTermEnabledDisabled (termPool [term]);
+									strategyCount [strategy] [run] [termPool [term]] = caseStudy.BestSampleInfo [size] [strategy].CountTermEnabled (termPool [term]);
 								}
 							}
 						}
 					}
 				}
+
+				// Additional idea: Determine if the ML algorithm is able to derive the influence (currently not implemented)
 
 
 				// Stage 4: Print it out

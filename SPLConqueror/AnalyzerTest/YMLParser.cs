@@ -7,10 +7,10 @@ namespace AnalyzerTest
 {
     public static class YMLParser
     {
-		/// <summary>
+	 /// <summary>
         /// Reads in a .yml-file where the configuration is stored.
         /// </summary>
-		/// <returns>The information from the file as <see cref="AnalyzerInfo"/>.</returns>
+	 /// <returns>The information from the file as <see cref="AnalyzerInfo"/>.</returns>
         /// <param name="filePath">The path to the .yml-file.</param>
         public static AnalyzerInfo ReadInFile (String filePath)
         {
