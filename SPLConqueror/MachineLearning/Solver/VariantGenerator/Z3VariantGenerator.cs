@@ -578,23 +578,47 @@ namespace MachineLearning.Solver
             return result;
         }
 
+        /// <summary>
+        /// This method aims to search for a configuration with the given number of selected features.
+        /// Additionally, the given features in the list are forcedly selected.
+        /// </summary>
+        /// <param name="vm">The variability model containing all options and their constraints.</param>
+        /// <param name="numberSelectedFeatures">The number of features that should be selected.</param>
+        /// <param name="featureWeight">The weight of certain feature combinations.</param>
+        /// <param name="lastSampledConfiguration">The last included sampled configuration.</param>
+        /// <returns>A list of <see cref="BinaryOption"/>, which should be selected.</returns>
+        public List<BinaryOption> GenerateConfigurationWithFeatureAndBucket(VariabilityModel vm, int numberSelectedFeatures, List<BinaryOption> featuresToSelect, Configuration lastSampledConfiguration)
+        {
+            Tuple<List<BoolExpr>, Dictionary<BoolExpr, BinaryOption>, Dictionary<BinaryOption, BoolExpr>, Context, Microsoft.Z3.Solver>  solverResult = CreateSolver(vm, numberSelectedFeatures, lastSampledConfiguration);
+            List<BoolExpr> variables = solverResult.Item1;
+            Dictionary<BoolExpr, BinaryOption> termToOption = solverResult.Item2;
+            Dictionary<BinaryOption, BoolExpr> optionToTerm = solverResult.Item3;
+            Context z3Context = solverResult.Item4;
+            Microsoft.Z3.Solver solver = solverResult.Item5;
 
-        public List<BinaryOption> GenerateConfigurationFromBucket(VariabilityModel vm, int numberSelectedFeatures, Dictionary<List<BinaryOption>, int> featureWeight, Configuration lastSampledConfiguration)
+            if (solver.Check() == Status.SATISFIABLE)
+            {
+                Model model = solver.Model;
+                List<BinaryOption> solution = RetrieveConfiguration(variables, model, termToOption);
+                return solution;
+            } else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// This method creates a new solver if none is instantiated; otherwise the cached solver is expanded.
+        /// </summary>
+        /// <param name="vm">The variability model.</param>
+        /// <param name="numberSelectedFeatures">The number of selected features to create the solver for.</param>
+        /// <param name="lastSampledConfiguration">The last configuration that was added to the sample set.</param>
+        /// <returns></returns>
+        private Tuple<List<BoolExpr>, Dictionary<BoolExpr, BinaryOption>, Dictionary<BinaryOption, BoolExpr>, Context, Microsoft.Z3.Solver> CreateSolver(VariabilityModel vm, int numberSelectedFeatures, Configuration lastSampledConfiguration)
         {
             if (_z3Cache == null)
             {
                 _z3Cache = new Dictionary<int, Z3Cache>();
-            }
-
-            List<KeyValuePair<List<BinaryOption>, int>> featureRanking;
-            if (featureWeight != null)
-            {
-                featureRanking = featureWeight.ToList();
-                featureRanking.Sort((first, second) => first.Value.CompareTo(second.Value));
-            }
-            else
-            {
-                featureRanking = new List<KeyValuePair<List<BinaryOption>, int>>();
             }
 
             List<BoolExpr> variables = null;
@@ -616,7 +640,7 @@ namespace MachineLearning.Solver
 
                 if (lastSampledConfiguration != null)
                 {
-                    // Add the previous configurations as constraints
+                    // Add the previous configuration as constraints
                     solver.Assert(Z3Solver.NegateExpr(z3Context, Z3Solver.ConvertConfiguration(z3Context, lastSampledConfiguration.getBinaryOptions(BinaryOption.BinaryValue.Selected), optionToTerm, vm)));
 
                     // Create a new backtracking point for the next run
@@ -639,12 +663,6 @@ namespace MachineLearning.Solver
 
                 solver.Assert(z3Constraints);
 
-                if (lastSampledConfiguration != null)
-                {
-                    // Add the previous configurations as constraints
-                    solver.Assert(Z3Solver.NegateExpr(z3Context, Z3Solver.ConvertConfiguration(z3Context, lastSampledConfiguration.getBinaryOptions(BinaryOption.BinaryValue.Selected), optionToTerm, vm)));
-                }
-
                 // The goal of this method is, to have an exact number of features selected
 
                 // Therefore, initialize an integer array with the value '1' for the pseudo-boolean equal function
@@ -658,8 +676,47 @@ namespace MachineLearning.Solver
                 // Create a backtracking point before adding the optimization goal
                 solver.Push();
 
+                if (lastSampledConfiguration != null)
+                {
+                    // Add the previous configurations as constraints
+                    solver.Assert(Z3Solver.NegateExpr(z3Context, Z3Solver.ConvertConfiguration(z3Context, lastSampledConfiguration.getBinaryOptions(BinaryOption.BinaryValue.Selected), optionToTerm, vm)));
+                }
+                solver.Push();
+
                 this._z3Cache[numberSelectedFeatures] = new Z3Cache(z3Context, solver, variables, optionToTerm, termToOption);
             }
+
+            return new Tuple<List<BoolExpr>, Dictionary<BoolExpr, BinaryOption>, Dictionary<BinaryOption, BoolExpr>, Context, Microsoft.Z3.Solver>(variables, termToOption, optionToTerm, z3Context, solver);
+        }
+
+        /// <summary>
+        /// Generates the configuration from a given bucket. To diversify the output, the least frequently selected feature is forcedly selected.
+        /// </summary>
+        /// <returns>The configuration from bucket.</returns>
+        /// <param name="vm">The variability model.</param>
+		/// <param name="numberSelectedFeatures">Number selected features (i.e., distance).</param>
+		/// <param name="featureWeight">Feature weight (i.e., the count of the features).</param>
+        /// <param name="lastSampledConfiguration">Last sampled configuration.</param>
+        public List<BinaryOption> GenerateConfigurationFromBucket(VariabilityModel vm, int numberSelectedFeatures, Dictionary<List<BinaryOption>, int> featureWeight, Configuration lastSampledConfiguration)
+        {
+
+            List<KeyValuePair<List<BinaryOption>, int>> featureRanking;
+            if (featureWeight != null)
+            {
+                featureRanking = featureWeight.ToList();
+                featureRanking.Sort((first, second) => first.Value.CompareTo(second.Value));
+            }
+            else
+            {
+                featureRanking = new List<KeyValuePair<List<BinaryOption>, int>>();
+            }
+
+            Tuple<List<BoolExpr>, Dictionary<BoolExpr, BinaryOption>, Dictionary<BinaryOption, BoolExpr>, Context, Microsoft.Z3.Solver> solverResult = CreateSolver(vm, numberSelectedFeatures, lastSampledConfiguration);
+            List<BoolExpr> variables = solverResult.Item1;
+            Dictionary<BoolExpr, BinaryOption> termToOption = solverResult.Item2;
+            Dictionary<BinaryOption, BoolExpr> optionToTerm = solverResult.Item3;
+            Context z3Context = solverResult.Item4;
+            Microsoft.Z3.Solver solver = solverResult.Item5;
 
             // Check if there is still a solution available by finding the first satisfiable configuration
             if (solver.Check() == Status.SATISFIABLE)

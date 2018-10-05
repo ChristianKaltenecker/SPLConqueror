@@ -15,18 +15,10 @@ namespace MachineLearning.Sampling.Hybrid.Distributive.SelectionHeuristic
     public class SolverSelection : ISelectionHeuristic
     {
         // The seed for the random-class
-        private int seed = 0;
+		protected int seed = 0;
 
         // number of features considered for weight optimization
-        private Tuple<int, int> featureRange = new Tuple<int, int>(1, 1);
-
-        /// <summary>
-        /// Initializes a new instance of the
-        /// <see cref="MachineLearning.Sampling.Hybrid.Distributive.SelectionHeuristic.SolverSelection"/> class.
-        /// </summary>
-        public SolverSelection()
-        {
-        }
+		protected Tuple<int, int> featureRange = new Tuple<int, int>(1, 1);
 
         /// <summary>
         /// Sets the seed of the random number generator.
@@ -40,7 +32,7 @@ namespace MachineLearning.Sampling.Hybrid.Distributive.SelectionHeuristic
         /// <summary>
         /// Sets the number of features, that will be considered for weight optimization.
         /// </summary>
-        /// <param name="features">The number of features.</param>
+        /// <param name="featureRange">The number of features.</param>
         public void setNumberFeatures(Tuple<int, int> featureRange)
         {
             this.featureRange = featureRange;
@@ -53,7 +45,7 @@ namespace MachineLearning.Sampling.Hybrid.Distributive.SelectionHeuristic
         /// <param name="wantedDistribution">The wanted distribution of the samples.</param>
         /// <param name="allBuckets">The buckets containing at least one configuration.</param>
         /// <param name="count">The number of configurations to select.</param>
-        /// <param name="optimization">The optimization to use</param>
+        /// <param name="optimization">The optimization to use.</param>
         public List<Configuration> SampleFromDistribution(Dictionary<double, double> wantedDistribution, List<double> allBuckets, int count, Optimization optimization = Optimization.NONE)
         {
             Random rand = new Random(seed);
@@ -184,7 +176,7 @@ namespace MachineLearning.Sampling.Hybrid.Distributive.SelectionHeuristic
         /// </summary>
         /// <returns>A new dictionary with initialized values.</returns>
         /// <param name="vm">The variability model.</param>
-        private Dictionary<List<BinaryOption>, int> InitializeWeightDict(VariabilityModel vm)
+		protected Dictionary<List<BinaryOption>, int> InitializeWeightDict(VariabilityModel vm)
         {
             List<BinaryOption> features = vm.BinaryOptions;
             Dictionary<List<BinaryOption>, int> weights = new Dictionary<List<BinaryOption>, int>();
@@ -206,7 +198,7 @@ namespace MachineLearning.Sampling.Hybrid.Distributive.SelectionHeuristic
         /// <returns>All combinations of features according to the feature range.</returns>
         /// <param name="vm">The variability model.</param>
         /// <param name="listToExpand">The current list of binary options.</param>
-        private List<List<BinaryOption>> BuildAllCombinations(VariabilityModel vm, List<BinaryOption> listToExpand)
+		protected List<List<BinaryOption>> BuildAllCombinations(VariabilityModel vm, List<BinaryOption> listToExpand)
         {
             List<List<BinaryOption>> result = new List<List<BinaryOption>>();
             if (listToExpand.Count == featureRange.Item2)
@@ -250,7 +242,7 @@ namespace MachineLearning.Sampling.Hybrid.Distributive.SelectionHeuristic
             return result;
         }
 
-        private static bool IsIncluded(List<List<BinaryOption>> allCombinations, List<BinaryOption> combinationToFind)
+		protected static bool IsIncluded(List<List<BinaryOption>> allCombinations, List<BinaryOption> combinationToFind)
         {
             foreach (List<BinaryOption> combination in allCombinations)
             {
@@ -278,7 +270,7 @@ namespace MachineLearning.Sampling.Hybrid.Distributive.SelectionHeuristic
             return false;
         }
 
-        private static bool TestExcludedOptions(List<BinaryOption> binOpts)
+		protected static bool TestExcludedOptions(List<BinaryOption> binOpts)
         {
             if (binOpts.Count == 1)
             {
@@ -307,7 +299,7 @@ namespace MachineLearning.Sampling.Hybrid.Distributive.SelectionHeuristic
         /// <param name="vm">The variability model.</param>
         /// <param name="weights">The dictionary containing the number of features in all configurations.</param>
         /// <param name="addedConfiguration">The newly added configuration.</param>
-        private void UpdateWeights(VariabilityModel vm, Dictionary<List<BinaryOption>, int> weights, Configuration addedConfiguration)
+		protected void UpdateWeights(VariabilityModel vm, Dictionary<List<BinaryOption>, int> weights, Configuration addedConfiguration)
         {
             List<BinaryOption> features = vm.BinaryOptions;
 
@@ -334,7 +326,7 @@ namespace MachineLearning.Sampling.Hybrid.Distributive.SelectionHeuristic
         /// </summary>
         /// <returns><c>true</c> if there is at least one sample; otherwise, <c>false</c>.</returns>
         /// <param name="noSamples">The array containing the information if a bucket has no more samples.</param>
-        private bool HasSamples(bool[] noSamples)
+		protected bool HasSamples(bool[] noSamples)
         {
             foreach (bool b in noSamples)
             {

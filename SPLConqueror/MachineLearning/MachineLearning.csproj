@@ -151,6 +151,7 @@
     <Compile Include="Sampling\Hybrid\Distributive\Distribution\NormalDistribution.cs" />
     <Compile Include="Sampling\Hybrid\Distributive\Distribution\GeometricDistribution.cs" />
     <Compile Include="Sampling\Hybrid\Distributive\Distribution\DistributionUtils.cs" />
+    <Compile Include="Sampling\Hybrid\Distributive\SelectionHeuristic\DiverseSelection.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SPLConqueror\SPLConqueror_Core.csproj">

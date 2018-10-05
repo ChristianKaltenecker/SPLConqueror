@@ -202,14 +202,13 @@ namespace MachineLearning.Solver
         }
 
         /// <summary>
-        /// This method has the objective to sample a configuration where n features are selected
+        /// This method creates a new solver if none is instantiated; otherwise the cached solver is expanded.
         /// </summary>
-        /// <returns>The first fitting configuration.</returns>
         /// <param name="vm">The variability model.</param>
-        /// <param name="numberSelectedFeatures">The number of features that should be selected.</param>
-        /// <param name="featureWeight">The weight of the features to minimize.</param>
-        /// <param name="sampledConfigurations">The sampled configurations until now.</param>
-        public List<BinaryOption> GenerateConfigurationFromBucket(VariabilityModel vm, int numberSelectedFeatures, Dictionary<List<BinaryOption>, int> featureWeight, Configuration lastSampledConfiguration)
+        /// <param name="numberSelectedFeatures">The number of selected features to create the solver for.</param>
+        /// <param name="lastSampledConfiguration">The last configuration that was added to the sample set.</param>
+        /// <returns></returns>
+        private Tuple<List<CspTerm>, Dictionary<BinaryOption, CspTerm>, Dictionary<CspTerm, BinaryOption>, ConstraintSystem> CreateSolver(VariabilityModel vm, int numberSelectedFeatures, Configuration lastSampledConfiguration)
         {
             if (this._constraintSystemCache == null)
             {
@@ -256,6 +255,28 @@ namespace MachineLearning.Solver
                 this._constraintSystemCache.Add(numberSelectedFeatures, new ConstraintSystemCache(S, variables, elemToTerm, termToElem));
 
             }
+
+            return new Tuple<List<CspTerm>, Dictionary<BinaryOption, CspTerm>, Dictionary<CspTerm, BinaryOption>, ConstraintSystem>(variables, elemToTerm, termToElem, S);
+        }
+
+        /// <summary>
+        /// This method has the objective to sample a configuration where n features are selected
+        /// </summary>
+        /// <returns>The first fitting configuration.</returns>
+        /// <param name="vm">The variability model.</param>
+        /// <param name="numberSelectedFeatures">The number of features that should be selected.</param>
+        /// <param name="featureWeight">The weight of the features to minimize.</param>
+        /// <param name="sampledConfigurations">The sampled configurations until now.</param>
+        public List<BinaryOption> GenerateConfigurationFromBucket(VariabilityModel vm, int numberSelectedFeatures, Dictionary<List<BinaryOption>, int> featureWeight, Configuration lastSampledConfiguration)
+        {
+
+            Tuple<List<CspTerm>, Dictionary<BinaryOption, CspTerm>, Dictionary<CspTerm, BinaryOption>, ConstraintSystem> solution = CreateSolver(vm, numberSelectedFeatures, lastSampledConfiguration);
+            List<CspTerm> variables = solution.Item1;
+            Dictionary<BinaryOption, CspTerm> elemToTerm = solution.Item2;
+            Dictionary<CspTerm, BinaryOption> termToElem = solution.Item3;
+            ConstraintSystem S = solution.Item4;
+
+            
 
             // Next, solve the constraint system
             ConstraintSolverSolution soln = S.Solve();
@@ -608,20 +629,42 @@ namespace MachineLearning.Solver
             return null;
         }
 
-        //public List<List<BinaryOption>> generateTilSize(int i1, int size, int timeout, VariabilityModel vm)
-        //{
-        //    foreach (Lazy<IVariantGenerator, ISolverType> solver in solvers)
-        //    {
-        //        if (solver.Metadata.SolverType.Equals("MSSolverFoundation")) return solver.Value.generateTilSize(i1, size, timeout, vm);
-        //    }
+        /// <summary>
+        /// This method aims to search for a configuration with the given number of selected features.
+        /// Additionally, the given features in the list are forcedly selected.
+        /// </summary>
+        /// <param name="vm">The variability model containing all options and their constraints.</param>
+        /// <param name="numberSelectedFeatures">The number of features that should be selected.</param>
+        /// <param name="featureWeight">The weight of certain feature combinations.</param>
+        /// <param name="lastSampledConfiguration">The last included sampled configuration.</param>
+        /// <returns>A list of <see cref="BinaryOption"/>, which should be selected.</returns>
+        public List<BinaryOption> GenerateConfigurationWithFeatureAndBucket(VariabilityModel vm, int numberSelectedFeatures, List<BinaryOption> featuresToSelect, Configuration lastSampledConfiguration)
+        {
+            Tuple<List<CspTerm>, Dictionary<BinaryOption, CspTerm>, Dictionary<CspTerm, BinaryOption>, ConstraintSystem> solution = CreateSolver(vm, numberSelectedFeatures, lastSampledConfiguration);
+            List<CspTerm> variables = solution.Item1;
+            Dictionary<BinaryOption, CspTerm> elemToTerm = solution.Item2;
+            Dictionary<CspTerm, BinaryOption> termToElem = solution.Item3;
+            ConstraintSystem S = solution.Item4;
 
-        //    //If not MS Solver, take any solver. Should be changed when supporting more than 2 solvers here
-        //    foreach (Lazy<IVariantGenerator, ISolverType> solver in solvers)
-        //    {
-        //        return solver.Value.generateTilSize(i1, size, timeout, vm);
-        //    }
-        //    return new List<List<BinaryOption>>();
-        //}
+            // Next, solve the constraint system
+            ConstraintSolverSolution soln = S.Solve();
 
+            List<BinaryOption> tempConfig = new List<BinaryOption>();
+
+            if (soln.HasFoundSolution)
+            {
+                tempConfig.Clear();
+                foreach (CspTerm cT in variables)
+                {
+                    if (soln.GetIntegerValue(cT) == 1)
+                        tempConfig.Add(termToElem[cT]);
+                }
+                return tempConfig;
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }

@@ -146,7 +146,7 @@ namespace MachineLearning.Sampling.Hybrid.Distributive
                     Int32.TryParse(this.strategyParameter[SEED], out seed);
                     ((RandomSelection)selection).setSeed(seed);
                 }
-                else if (this.selection is SolverSelection)
+                else if (this.selection is SolverSelection || this.selection is DiverseSelection)
                 {
                     int seed = 0;
                     Int32.TryParse(this.strategyParameter[SEED], out seed);
