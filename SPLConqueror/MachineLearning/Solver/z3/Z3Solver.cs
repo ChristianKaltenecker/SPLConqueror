@@ -268,6 +268,10 @@ namespace MachineLearning.Solver
         /// <returns>The corresponding <see cref="BoolExpr"/>.</returns>
         public static BoolExpr ConvertConfiguration(Context context, List<BinaryOption> options, Dictionary<BinaryOption, BoolExpr> optionToTerm, VariabilityModel vm)
         {
+			if (options.Count == 1) {
+				return optionToTerm [options [0]];
+			}
+
             List<BoolExpr> andGroup = new List<BoolExpr>();
             foreach (BinaryOption binOpt in vm.BinaryOptions)
             {

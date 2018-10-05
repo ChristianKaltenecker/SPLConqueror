@@ -15,7 +15,7 @@ namespace MachineLearning.Sampling.Hybrid.Distributive.SelectionHeuristic
         /// <param name="allBuckets">The buckets containing at least one configuration.</param>
         /// <param name="count">The number of configurations to select.</param>
         /// <param name="optimization">The optimization to use.</param>
-		public List<Configuration> SampleFromDistribution (Dictionary<double, double> wantedDistribution, List<double> allBuckets, int count, Optimization optimization)
+		public override List<Configuration> SampleFromDistribution (Dictionary<double, double> wantedDistribution, List<double> allBuckets, int count, Optimization optimization)
 		{
 			Random rand = new Random (seed);
             List<Configuration> selectedConfigurations = new List<Configuration> ();
@@ -28,10 +28,6 @@ namespace MachineLearning.Sampling.Hybrid.Distributive.SelectionHeuristic
 			Dictionary<List<BinaryOption>, int> featureWeight = InitializeWeightDict (GlobalState.varModel);
 
             List<KeyValuePair<List<BinaryOption>, int>> featureRanking;
-            if (featureWeight == null)
-            {
-                throw new InvalidOperationException("For the diverse selection heuristic, a feature weight has to be provided.");
-            }
 
             // Create a distribution for each candidate
             Dictionary<List<BinaryOption>, Dictionary<double, double>> candidateDistributions = new Dictionary<List<BinaryOption>, Dictionary<double, double>>();
@@ -63,9 +59,9 @@ namespace MachineLearning.Sampling.Hybrid.Distributive.SelectionHeuristic
                 double currentProbability = 0;
                 int currentBucket = 0;
 
-                while (randomDouble > currentProbability + wantedDistribution.ElementAt(currentBucket).Value)
+				while (randomDouble > currentProbability + currentDistribution.ElementAt(currentBucket).Value)
                 {
-                    currentProbability += wantedDistribution.ElementAt(currentBucket).Value;
+                    currentProbability += currentDistribution.ElementAt(currentBucket).Value;
                     currentBucket++;
                 }
 
@@ -88,7 +84,8 @@ namespace MachineLearning.Sampling.Hybrid.Distributive.SelectionHeuristic
 
                 List<BinaryOption> solution = null;
 
-                solution = ConfigurationBuilder.vg.GenerateConfigurationWithFeatureAndBucket(GlobalState.varModel, currentBucket, leastFrequentFeature, selectedConfigurationsFromBucket[currentBucket]);
+				solution = ConfigurationBuilder.vg.GenerateConfigurationWithFeatureAndBucket(GlobalState.varModel, distanceOfBucket, leastFrequentFeature, selectedConfigurationsFromBucket[currentBucket]);
+				selectedConfigurationsFromBucket [currentBucket] = null;
 
                 // If a bucket was selected that now contains no more configurations, repeat the procedure
                 if (solution == null)
@@ -102,6 +99,14 @@ namespace MachineLearning.Sampling.Hybrid.Distributive.SelectionHeuristic
                     candidateDistributions[leastFrequentFeature] = DistributionUtils.AdjustToOne(candidateDistributions[leastFrequentFeature]);
                     continue;
                 }
+
+				if (!solution.Contains (leastFrequentFeature [0])) {
+					throw new InvalidOperationException ("The solution does not contain the forced feature.");
+				}
+
+				if (solution.Count != distanceOfBucket) {
+					throw new InvalidOperationException ("The solution does not contain the specified number of features.");
+				}
 
                 // Update weights
                 Configuration currentSelectedConfiguration = new Configuration(solution);

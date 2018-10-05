@@ -46,7 +46,7 @@ namespace MachineLearning.Sampling.Hybrid.Distributive.SelectionHeuristic
         /// <param name="allBuckets">The buckets containing at least one configuration.</param>
         /// <param name="count">The number of configurations to select.</param>
         /// <param name="optimization">The optimization to use.</param>
-        public List<Configuration> SampleFromDistribution(Dictionary<double, double> wantedDistribution, List<double> allBuckets, int count, Optimization optimization = Optimization.NONE)
+        public virtual List<Configuration> SampleFromDistribution(Dictionary<double, double> wantedDistribution, List<double> allBuckets, int count, Optimization optimization = Optimization.NONE)
         {
             Random rand = new Random(seed);
             List<Configuration> selectedConfigurations = new List<Configuration>();
@@ -242,6 +242,13 @@ namespace MachineLearning.Sampling.Hybrid.Distributive.SelectionHeuristic
             return result;
         }
 
+
+        /// <summary>
+        /// Returns <c>true</c> if the combination to find is included in allCombinations.
+        /// </summary>
+        /// <returns><c>true</c>, if included was found, <c>false</c> otherwise.</returns>
+        /// <param name="allCombinations">All combinations of binary options to search for.</param>
+        /// <param name="combinationToFind">Combination to find.</param>
 		protected static bool IsIncluded(List<List<BinaryOption>> allCombinations, List<BinaryOption> combinationToFind)
         {
             foreach (List<BinaryOption> combination in allCombinations)
@@ -270,6 +277,11 @@ namespace MachineLearning.Sampling.Hybrid.Distributive.SelectionHeuristic
             return false;
         }
 
+        /// <summary>
+        /// Tests whether the list of binary options contains options that excludes each other.
+        /// </summary>
+        /// <returns><c>true</c>, if no options exclude each other, <c>false</c> otherwise.</returns>
+        /// <param name="binOpts">The list of binary options to test.</param>
 		protected static bool TestExcludedOptions(List<BinaryOption> binOpts)
         {
             if (binOpts.Count == 1)
